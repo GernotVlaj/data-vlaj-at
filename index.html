@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>data.vlaj.at</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-logo">
+    <span class="nav-logo-dot"></span>
+    data.vlaj.at
+  </div>
+  <div class="nav-search-wrap" id="searchWrap" onclick="document.getElementById('navSearch').focus()">
+    <i class="ti ti-search" style="font-size:15px;color:var(--text3);flex-shrink:0;" aria-hidden="true"></i>
+    <input id="navSearch" type="text" placeholder="Indikator suchen…" autocomplete="off"
+      oninput="onNavSearch(this.value)" onfocus="openNavDD()" />
+    <i id="navSearchClear" class="ti ti-x" style="font-size:13px;color:var(--text3);cursor:pointer;display:none;flex-shrink:0;" onclick="clearNavSearch()" aria-label="Suche löschen"></i>
+  </div>
+  <div class="nav-right">
+    <span class="status-dot"></span>
+    <span id="dataAge" style="font-size:11px;color:var(--text3)">Verbinde…</span>
+    <button id="themeToggle" onclick="toggleTheme()">
+      <span id="themeIcon">🌙</span>
+      <span id="themeLabel">Dark</span>
+    </button>
+  </div>
+  <!-- Search dropdown -->
+  <div class="nav-dd" id="navDD"><div id="navDDContent"></div></div>
+</nav>
+
+<!-- Group tabs row -->
+<div class="group-tabs-bar" id="groupTabsBar">
+  <div class="group-tabs-inner" id="groupTabsInner"></div>
+  <div class="group-overflow-wrap" id="groupOverflowWrap">
+    <button class="group-overflow-btn" id="groupOverflowBtn" onclick="toggleOverflowMenu()">
+      <span id="groupOverflowLabel">Kategorie</span>
+      <i class="ti ti-chevron-down" style="font-size:12px" aria-hidden="true"></i>
+    </button>
+    <div class="group-overflow-menu" id="groupOverflowMenu"></div>
+  </div>
+</div>
+
+<!-- Indicator pills row -->
+<div class="indicator-pills-bar" id="indicatorPillsBar"></div>
+
+<div class="container">
+  <div class="err-bar" id="errBar"></div>
+
+  <div class="main-grid">
+    <div class="sidebar">
+      <div class="sidebar-header">
+        Länder
+        <span style="font-size:10px;color:var(--text3);font-weight:400">max. alle wählbar</span>
+      </div>
+      <div id="cbList"></div>
+      <div class="bulk-btns">
+        <button onclick="setAll(true)">Alle</button>
+        <button onclick="setAll(false)">Keine</button>
+      </div>
+    </div>
+
+    <div class="chart-col">
+      <div class="chart-card">
+        <div class="chart-header">
+          <div>
+            <div class="chart-title" id="chartTitle">Staatsverschuldung</div>
+            <div class="chart-subtitle">1990 – 2024 · Weltbank Live-Daten</div>
+          </div>
+          <button id="refreshBtn" onclick="fetchLive()" style="display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;border:1.5px solid var(--border2);background:var(--card);font-size:12px;font-weight:500;color:var(--text2);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;white-space:nowrap" title="Live-Daten von der Weltbank laden">
+            <span id="refreshIcon">⚡</span> Live laden
+          </button>
+        </div>
+        <div class="chart-inner">
+          <canvas id="chart" role="img" aria-label="Liniendiagramm Wirtschaftsdaten"></canvas>
+          <div class="overlay" id="overlay">
+            <div class="spinner"></div>
+            <div class="overlay-msg" id="overlayMsg">Daten werden geladen…</div>
+          </div>
+        </div>
+
+        <div class="year-range-wrap">
+          <div class="year-range-labels">
+            <span id="yearFrom">1990</span>
+            <span style="color:var(--text3);font-size:11px">Zeitraum</span>
+            <span id="yearTo">2024</span>
+          </div>
+          <div class="year-range-track" id="rangeTrack">
+            <div class="year-range-fill" id="rangeFill"></div>
+            <input type="range" id="sliderFrom" min="1990" max="2024" value="1990" step="1"
+              oninput="onRangeInput()" class="year-slider year-slider-from">
+            <input type="range" id="sliderTo"   min="1990" max="2024" value="2024" step="1"
+              oninput="onRangeInput()" class="year-slider year-slider-to">
+          </div>
+        </div>
+      </div>
+
+      <div class="stats" id="stats"></div>
+      <div class="explainer" id="explainer"></div>
+      <div class="sources-box" id="sourcesBox"></div>
+    </div>
+  </div>
+</div>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
