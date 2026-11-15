@@ -7,10 +7,17 @@ on:
   # Manuell auslösbar im GitHub UI (Actions → Run workflow)
   workflow_dispatch:
 
+permissions:
+  contents: write   # zum Pushen von docs/data.json
+
+concurrency:
+  group: update-data
+  cancel-in-progress: false
+
 jobs:
   update:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
 
     steps:
       - name: Repository auschecken
@@ -34,4 +41,5 @@ jobs:
           git add docs/data.json
           # Nur committen wenn sich etwas geändert hat
           git diff --staged --quiet || git commit -m "data: wöchentliches Update $(date -u '+%Y-%m-%d')"
+          git pull --rebase --quiet
           git push

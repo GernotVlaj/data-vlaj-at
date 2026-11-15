@@ -1,7 +1,7 @@
 // ═══════════════════════════════════════════════════════════
 //  data.vlaj.at — app.js
-//  Lädt data.json (wöchentlich von pipeline.php generiert)
-//  Kein direkter API-Call, kein Fallback-Code, kein Cache
+//  Lädt data.json (wöchentlich von pipeline/fetch_data.py
+//  via GitHub Actions erzeugt). Kein direkter API-Call.
 // ═══════════════════════════════════════════════════════════
 
 // ── State ─────────────────────────────────────────────────
@@ -11,7 +11,7 @@ const appState = {
   db:       null,   // komplette data.json
   years:    [],
   yearFrom: 1990,
-  yearTo:   2024,
+  yearTo:   null,
 };
 let chartInst = null;
 
@@ -181,6 +181,14 @@ function renderChart() {
   });
 }
 
+// ── Datenherkunft ─────────────────────────────────────────
+function srcLabel(c, t) {
+  if(c.agg) return 'Gewichteter Durchschnitt';
+  const s = appState.db?.sources?.[t.id]?.[c.code];
+  if(s === 'fallback') return 'Statischer Datensatz (Schätzung)';
+  return t.source;
+}
+
 // ── Render Stats ──────────────────────────────────────────
 function renderStats() {
   const t = TOPICS.find(x => x.id === appState.topic);
@@ -210,7 +218,7 @@ function renderStats() {
       <div class="stat-val">${fmtVal(latest, t)}</div>
       <div class="stat-sub">Spanne ${fmtVal(R(mn, t.dec??1), t)} – ${fmtVal(R(mx, t.dec??1), t)}</div>
       <div class="stat-trend" style="color:${up?'#4CAF6E':'#E8453C'}">${tr>0?'↑':'↓'} ${fmtVal(Math.abs(tr), t)} seit ${yearFrom}</div>
-      <div class="stat-src">⬡ ${t.source}</div>
+      <div class="stat-src">⬡ ${srcLabel(c, t)}</div>
     </div>`;
   }).join('') || `<div class="stat"><div class="stat-lbl">Kein Land gewählt</div></div>`;
 
@@ -303,6 +311,9 @@ function setTopic(id) {
   const t = TOPICS.find(x => x.id === id);
   const el = $('chartTitle');
   if(el) el.textContent = t.title.split('(')[0].trim();
+  const sub = $('chartSubtitle');
+  if(sub && appState.years.length)
+    sub.textContent = `${appState.years[0]} – ${appState.years.at(-1)} · ${t.yLbl || ''}`;
   renderChart(); renderStats(); renderExplainer();
 }
 

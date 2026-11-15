@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -71,11 +71,8 @@
         <div class="chart-header">
           <div>
             <div class="chart-title" id="chartTitle">Staatsverschuldung</div>
-            <div class="chart-subtitle">1990 – 2024 · Weltbank Live-Daten</div>
+            <div class="chart-subtitle" id="chartSubtitle">Weltbank-Daten</div>
           </div>
-          <button id="refreshBtn" onclick="fetchLive()" style="display:flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;border:1.5px solid var(--border2);background:var(--card);font-size:12px;font-weight:500;color:var(--text2);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;white-space:nowrap" title="Live-Daten von der Weltbank laden">
-            <span id="refreshIcon">⚡</span> Live laden
-          </button>
         </div>
         <div class="chart-inner">
           <canvas id="chart" role="img" aria-label="Liniendiagramm Wirtschaftsdaten"></canvas>
