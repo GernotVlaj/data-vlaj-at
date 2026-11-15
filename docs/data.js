@@ -130,8 +130,8 @@ const TOPIC_GROUPS = [
       source: 'Näherung via Weltbank SP.POP.DPND (Abhängigkeitsquotient als Proxy)' },
     { id: 'pyramid', label: 'Bevölkerungspyramide', mode: 'pyramid', ind: null, unit: '', yLbl: 'Personen', dec: 0,
       title: 'Bevölkerungspyramide (Alter & Geschlecht)',
-      body: 'Die Bevölkerungspyramide zeigt den Altersaufbau eines Landes: links die Männer, rechts die Frauen, unten die Jüngsten. Eine breite Basis (klassische Pyramide) steht für hohe Geburtenraten, wie in vielen afrikanischen Ländern. Eine Urnen- oder Zwiebelform mit schmaler Basis und breiter Mitte zeigt eine alternde Gesellschaft, wie in Japan, Italien oder Österreich. Mit dem Schieberegler oder ▶ lässt sich die Entwicklung von 1960 bis 2050 verfolgen. Jahre nach dem letzten Schätzjahr sind Prognosen (mittlere Variante) und heller dargestellt. Der Umriss zeigt zum Vergleich das letzte Schätzjahr.',
-      source: 'Weltbank: Population estimates and projections (SP.POP.<Alter>.MA/FE)' },
+      body: 'Die Bevölkerungspyramide zeigt den Altersaufbau eines Landes: links die Männer, rechts die Frauen, unten die Jüngsten. Eine breite Basis (klassische Pyramide) steht für hohe Geburtenraten, wie in vielen afrikanischen Ländern. Eine Urnen- oder Zwiebelform mit schmaler Basis und breiter Mitte zeigt eine alternde Gesellschaft, wie in Japan, Italien oder Österreich. Mit dem Schieberegler oder ▶ lässt sich die Entwicklung von 1950 bis 2100 verfolgen, Jahr für Jahr und für jedes Lebensjahr einzeln. Jahre nach dem letzten Schätzjahr sind Prognosen der UN (mittlere Variante) und heller dargestellt. Der Umriss zeigt zum Vergleich das aktuelle Jahr.',
+      source: 'UN World Population Prospects 2024 (mittlere Variante)' },
   ]},
   { group: 'Bildung & Innovation', topics: [
     { id: 'rdexp',    label: 'Forschungsausg. R&D', ind: 'GB.XPD.RSDV.GD.ZS', unit: '% BIP', yLbl: '% des BIP',   dec: 2,

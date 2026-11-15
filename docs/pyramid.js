@@ -50,6 +50,8 @@ function pyrFlag(iso2) {
   if(!/^[A-Z]{2}$/.test(iso2)) return '🏳️';
   return String.fromCodePoint(...[...iso2].map(ch => 0x1F1E6 + ch.charCodeAt(0) - 65));
 }
+// Vergleichs-/Startjahr: aktuelles Jahr (falls vorhanden), sonst letztes Schätzjahr
+const pyrRefYear = () => pyr.index.refYear ?? Math.min(pyr.index.lastEstimateYear, pyr.index.years.at(-1));
 const pyrCountry = iso3 => pyr.index?.countries.find(c => c.iso3 === iso3);
 
 async function pyrLoadIndex() {
@@ -80,7 +82,7 @@ async function enterPyramid() {
     pyrReadHash();
     const c = pyrCountry(pyr.iso3);
     if(!c || !c.hasData) pyr.iso3 = 'AUT';
-    if(pyr.year == null) pyr.year = Math.min(pyr.index.lastEstimateYear, pyr.index.years.at(-1));
+    if(pyr.year == null) pyr.year = pyrRefYear();
     pyrInitControls();
     pyrBuildList();
     await pyrSelect(pyr.iso3);
@@ -143,7 +145,8 @@ function pyrBuildList() {
     const favs = all.filter(c => fav.has(c.iso2));
     if(favs.length) html += `<div class="cb-group-label">Favoriten</div>` + favs.map(pyrRow).join('');
   }
-  for(const [rid, rname] of Object.entries(PYR_REGIONS)) {
+  const regions = pyr.index.regions?.map(r => [r.id, r.name]) || Object.entries(PYR_REGIONS);
+  for(const [rid, rname] of regions) {
     const rows = all.filter(c => c.region === rid);
     if(rows.length) html += `<div class="cb-group-label">${rname}</div>` + rows.map(pyrRow).join('');
   }
@@ -161,7 +164,7 @@ function pyrInitControls() {
   $('pyrPctBtn').classList.toggle('on', pyr.pct);
   $('pyrAbsBtn').classList.toggle('on', !pyr.pct);
   $('pyrOutline').checked = pyr.outline;
-  $('pyrOutlineYear').textContent = pyr.index.lastEstimateYear;
+  $('pyrOutlineYear').textContent = pyrRefYear();
   // Prognose-Bereich im Slider markieren
   const est = pyr.index.lastEstimateYear;
   const p = (est - yrs[0]) / (yrs.at(-1) - yrs[0]) * 100;
@@ -232,7 +235,7 @@ function pyrYearData(d, year) {
 function pyrBounds(ages) {
   return ages.map(a => {
     const n = a.match(/\d+/g).map(Number);
-    return n.length > 1 ? [n[0], n[1] - n[0] + 1] : [n[0], a.includes('+') ? 15 : 1];
+    return n.length > 1 ? [n[0], n[1] - n[0] + 1] : [n[0], a.includes('+') ? (ages.length > 25 ? 5 : 15) : 1];
   });
 }
 
@@ -281,7 +284,8 @@ function pyrRender() {
   if(!yd) return;
   const est = pyr.index.lastEstimateYear;
   const prog = pyr.year > est;
-  const ref = pyr.outline && pyr.year !== est ? pyrYearData(d, est) : null;
+  const refY = pyrRefYear();
+  const ref = pyr.outline && pyr.year !== refY ? pyrYearData(d, refY) : null;
   const val = (v, t) => pyr.pct ? (t ? v / t * 100 : 0) : v;
 
   // Kopfzeile
@@ -304,10 +308,10 @@ function pyrRender() {
   if(ref) {
     const outlineCol = getComputedStyle(document.documentElement).getPropertyValue('--text2').trim() || '#666';
     datasets.push(
-      { label: `Männer ${est}`, data: rev(ref.m.map(v => -val(v, ref.total))), raw: rev(ref.m), isRef: true,
-        backgroundColor: 'transparent', borderColor: outlineCol, borderWidth: 1.2, order: 1 },
-      { label: `Frauen ${est}`, data: rev(ref.f.map(v => val(v, ref.total))), raw: rev(ref.f), isRef: true,
-        backgroundColor: 'transparent', borderColor: outlineCol, borderWidth: 1.2, order: 1 });
+      { label: `Männer ${refY}`, data: rev(ref.m.map(v => -val(v, ref.total))), raw: rev(ref.m), isRef: true,
+        backgroundColor: 'transparent', borderColor: outlineCol, borderWidth: { left: 1.5, right: 0, top: 0, bottom: 0 }, borderSkipped: false, order: 1 },
+      { label: `Frauen ${refY}`, data: rev(ref.f.map(v => val(v, ref.total))), raw: rev(ref.f), isRef: true,
+        backgroundColor: 'transparent', borderColor: outlineCol, borderWidth: { left: 0, right: 1.5, top: 0, bottom: 0 }, borderSkipped: false, order: 1 });
   }
 
   if(pyr.chart) {
@@ -321,7 +325,7 @@ function pyrRender() {
       data: { labels, datasets },
       options: {
         indexAxis: 'y', responsive: true, maintainAspectRatio: false, animation: { duration: 250 },
-        datasets: { bar: { grouped: false, categoryPercentage: 1, barPercentage: .92 } },
+        datasets: { bar: { grouped: false, categoryPercentage: 1, barPercentage: d.ages.length > 25 ? 1 : .92 } },
         interaction: { mode: 'index', axis: 'y', intersect: false },
         plugins: {
           legend: { display: false },
@@ -331,7 +335,7 @@ function pyrRender() {
             titleFont: { size: 13, weight: '600', family: 'DM Sans' }, bodyFont: { size: 12, family: 'DM Sans' },
             filter: item => !item.dataset.isRef,
             callbacks: {
-              title: items => `Alter ${items[0].label} · ${pyr.year}`,
+              title: items => `Alter ${items[0].label}${/^\d+$/.test(items[0].label) ? (items[0].label === '1' ? ' Jahr' : ' Jahre') : ''} · ${pyr.year}`,
               label: item => {
                 const yd2 = pyrYearData(pyr.cache[pyr.iso3], pyr.year);
                 const n = item.dataset.raw[item.dataIndex];
@@ -350,7 +354,11 @@ function pyrRender() {
           y: {
             grid: { display: false },
             // bei feinen Altersstufen (z. B. später Einzeljahre) automatisch ausdünnen
-            ticks: { color: '#9A9A9A', font: { size: 10, family: 'DM Mono' }, autoSkip: d.ages.length > 25 },
+            ticks: { color: '#9A9A9A', font: { size: 10, family: 'DM Mono' }, autoSkip: false,
+              callback(v) {
+                const l = this.getLabelForValue(v);
+                return d.ages.length <= 25 || l.includes('+') || parseInt(l) % 10 === 0 ? l : '';
+              } },
           },
         },
       },
@@ -366,7 +374,7 @@ function pyrRenderStats(d, yd, c) {
     ${sub ? `<div class="stat-sub">${sub}</div>` : ''}</div>`;
   setEl('stats', [
     tile('Bevölkerung', pyrBig(yd.total), `${pyrFmt(yd.total)} · ${pyr.year}`, '#F4723B'),
-    tile('Medianalter', s.median != null ? s.median.toFixed(1).replace('.', ',') + ' J' : '–', 'aus 5-Jahres-Gruppen geschätzt', '#7F77DD'),
+    tile('Medianalter', s.median != null ? s.median.toFixed(1).replace('.', ',') + ' J' : '–', d.ages.length > 25 ? 'Hälfte jünger, Hälfte älter' : 'aus 5-Jahres-Gruppen geschätzt', '#7F77DD'),
     tile('Kinder 0–14', pyrPct(s.young), 'Anteil an Bevölkerung', '#639922'),
     tile('Erwerbsalter 15–64', pyrPct(s.work), 'Anteil an Bevölkerung', '#1D9E75'),
     tile('65 und älter', pyrPct(s.old), 'Anteil an Bevölkerung', '#EF9F27'),
