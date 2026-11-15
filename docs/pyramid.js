@@ -70,6 +70,7 @@ async function pyrLoadCountry(iso3) {
 // ── Modus betreten / verlassen ────────────────────────────
 async function enterPyramid() {
   pyr.active = true;
+  pyrMatchHeight();
   document.body.classList.add('pyr-mode');
   if(chartInst) { chartInst.destroy(); chartInst = null; }
   setEl('stats', '');
@@ -99,6 +100,15 @@ function exitPyramid() {
   if(location.hash.startsWith('#pyramid')) history.replaceState(null, '', location.pathname + location.search);
 }
 
+// Radio-Liste so hoch wie die normale Checkbox-Liste (nur Desktop;
+// mobil gilt die kompakte Höhe aus dem CSS)
+function pyrMatchHeight() {
+  const list = $('pyrList'), cb = $('cbList'), bulk = document.querySelector('.bulk-btns');
+  if(!list || !cb || !window.matchMedia?.('(min-width: 768px)').matches) { if(list) list.style.maxHeight = ''; return; }
+  const h = cb.offsetHeight + (bulk?.offsetHeight || 0) - 46;   // 46 ≈ Suchfeld + Abstand
+  if(h > 200) list.style.maxHeight = h + 'px';
+}
+
 // ── URL-Hash: #pyramid/AUT/2050 ───────────────────────────
 function pyrReadHash() {
   const m = location.hash.match(/^#pyramid(?:\/([A-Z]{3}))?(?:\/(\d{4}))?/);
@@ -116,15 +126,18 @@ function pyrRow(c) {
   return `<label class="cb-row pyr-row${dis ? ' disabled' : ''}" ${dis ? 'title="Keine Daten verfügbar"' : ''}>
     <input type="radio" name="pyrCountry" value="${c.iso3}" ${c.iso3 === pyr.iso3 ? 'checked' : ''} ${dis ? 'disabled' : ''}
       onchange="pyrSelect('${c.iso3}')">
-    <span class="cb-label">${pyrFlag(c.iso2)} ${c.label}</span></label>`;
+    <span class="cb-label">${c.icon || pyrFlag(c.iso2)} ${c.label}</span></label>`;
 }
 
 function pyrBuildList() {
   const term = pyr.search.trim().toLowerCase();
+  const match = c => !term || c.label.toLowerCase().includes(term) || c.iso3.toLowerCase() === term;
+  // Aggregate (Welt, Europa, Afrika) ganz oben, in Pipeline-Reihenfolge
+  const aggs = pyr.index.countries.filter(c => c.region === 'AGG' && match(c));
   const all = pyr.index.countries
-    .filter(c => !term || c.label.toLowerCase().includes(term) || c.iso3.toLowerCase() === term)
+    .filter(c => c.region !== 'AGG' && match(c))
     .sort((a, b) => a.label.localeCompare(b.label, 'de'));
-  let html = '';
+  let html = aggs.length ? `<div class="cb-group-label">Aggregate</div>` + aggs.map(pyrRow).join('') : '';
   if(!term) {
     const fav = new Set(REAL_CODES);
     const favs = all.filter(c => fav.has(c.iso2));
@@ -273,7 +286,7 @@ function pyrRender() {
 
   // Kopfzeile
   $('chartTitle').textContent = `Bevölkerungspyramide · ${c.label}`;
-  $('chartSubtitle').textContent = `${pyr.year} · ${pyrBig(yd.total)} Einwohner${prog ? ' · Prognose' : ''}`;
+  $('chartSubtitle').textContent = `${pyr.year} · ${pyrBig(yd.total)} Einwohner${c.members ? ` · Summe aus ${c.members} Ländern` : ''}${prog ? ' · Prognose' : ''}`;
   $('pyrYear').textContent = pyr.year;
   $('pyrBadge').hidden = !prog;
   pyrWriteHash();

@@ -45,6 +45,20 @@ GROUPS = ["0004", "0509", "1014", "1519", "2024", "2529", "3034", "3539",
 AGES   = [f"{int(g[:2])}–{int(g[2:])}" if g != "80UP" else "80+" for g in GROUPS]
 CODES  = {f"SP.POP.{g}.{s}": (s, i) for i, g in enumerate(GROUPS) for s in ("MA", "FE")}
 
+# Aggregate ganz oben in der Liste. Welt direkt von der Weltbank, Europa und
+# Afrika als Summe der Länder nach UN-Abgrenzung (die WB-Regionen passen nicht:
+# „Europe & Central Asia“ enthält Zentralasien, „Sub-Saharan Africa“ kein Nordafrika).
+EUROPE = ["ALB","AND","AUT","BLR","BEL","BIH","BGR","CHI","HRV","CZE","DNK","EST","FRO",
+          "FIN","FRA","DEU","GIB","GRC","HUN","ISL","IRL","IMN","ITA","XKX","LVA","LIE",
+          "LTU","LUX","MLT","MDA","MCO","MNE","NLD","MKD","NOR","POL","PRT","ROU","RUS",
+          "SMR","SRB","SVK","SVN","ESP","SWE","CHE","UKR","GBR"]
+NORTH_AFRICA = ["DZA","EGY","LBY","MAR","TUN","DJI"]   # + alle Länder der Region SSF
+AGGREGATES = [   # (Kürzel, Name, Icon)
+    ("WLD", "Welt",   "🌐"),
+    ("EUR", "Europa", "🌍"),
+    ("AFR", "Afrika", "🌍"),
+]
+
 REGIONS = {   # Weltbank-Regionsname → Kürzel (wie in der WB-API)
     "Europe & Central Asia": "ECS", "North America": "NAC",
     "Latin America & Caribbean": "LCN", "East Asia & Pacific": "EAS",
@@ -101,7 +115,7 @@ def main():
         found = set()
         for row in read_csv(zf, DATA_CSV):
             code = row.get("Indicator Code")
-            if code not in CODES or row.get("Country Code") not in known:
+            if code not in CODES or row.get("Country Code") not in known | {"WLD"}:
                 continue
             sex, gi = CODES[code]
             found.add(code)
@@ -116,10 +130,24 @@ def main():
         log(f"✗ Abbruch: {e} – bestehende Dateien bleiben unverändert")
         sys.exit(1)
 
+    # Europa / Afrika summieren
+    members = {
+        "EUR": [i for i in EUROPE if i in known],
+        "AFR": [c["iso3"] for c in countries if c["region"] == "SSF"] + [i for i in NORTH_AFRICA if i in known],
+    }
+    for agg, isos in members.items():
+        rows = [data[i] for i in isos if i in data]
+        data[agg] = {s: [[sum(r[s][yi][gi] or 0 for r in rows) for gi in range(len(GROUPS))]
+                         for yi in range(len(YEARS))] for s in ("MA", "FE")}
+        log(f"{agg}: Summe aus {len(rows)} Ländern")
+    for iso, name, icon in AGGREGATES:
+        countries.append({"iso3": iso, "iso2": "", "name": name, "region": "AGG", "icon": icon,
+                          "members": len(members.get(iso, [])) or None})
+
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     ref = YEARS.index(min(LAST_ESTIMATE_YEAR, END_YEAR))
     with_data = 0
-    for c in sorted(countries, key=lambda c: c["iso3"]):
+    for c in countries:
         d = data.get(c["iso3"])
         c["hasData"] = bool(d) and sum(v or 0 for v in d["MA"][ref] + d["FE"][ref]) > 0
         path = OUT_DIR / f"{c['iso3']}.json"
@@ -136,7 +164,7 @@ def main():
         "years": YEARS,
         "lastEstimateYear": LAST_ESTIMATE_YEAR,
         "ages": AGES,
-        "countries": sorted(countries, key=lambda c: c["iso3"]),
+        "countries": countries,   # Aggregate zuletzt angehängt, Reihenfolge = AGGREGATES
     }
     (OUT_DIR / "index.json").write_text(json.dumps(index, ensure_ascii=False, separators=(",", ":")))
     log(f"✓ {with_data} Länder mit Daten, {len(countries) - with_data} ohne → docs/pyramid/")
