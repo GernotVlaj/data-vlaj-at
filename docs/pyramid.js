@@ -241,11 +241,13 @@ function pyrBounds(ages) {
 
 function pyrStatsFor(d, yd) {
   const b = pyrBounds(d.ages);
-  let young = 0, work = 0, old = 0, men = 0;
+  let young = 0, work = 0, old = 0, men = 0, o80 = 0, ageSum = 0;
   const tot = d.ages.map((_, i) => yd.m[i] + yd.f[i]);
   tot.forEach((v, i) => {
     const [lo, w] = b[i], hi = lo + w - 1;
     if(hi <= 14) young += v; else if(lo >= 65) old += v; else work += v;
+    if(lo >= 80) o80 += v;
+    ageSum += v * (lo + w / 2);          // Gruppenmitte (Einzeljahr: x,5)
   });
   yd.m.forEach(v => men += v);
   // Medianalter: lineare Interpolation in der Gruppe, die die Hälfte überschreitet
@@ -260,6 +262,8 @@ function pyrStatsFor(d, yd) {
   return {
     young: young / yd.total * 100, work: work / yd.total * 100, old: old / yd.total * 100,
     dep: (young + old) / (work || 1) * 100, men: men / yd.total * 100, median,
+    oldDep: old / (work || 1) * 100, o80: o80 / yd.total * 100, mean: ageSum / yd.total,
+    babies: b[0][1] === 1 ? tot[0] : null,  // nur bei Einzeljahren
   };
 }
 
@@ -369,6 +373,10 @@ function pyrRender() {
 
 function pyrRenderStats(d, yd, c) {
   const s = pyrStatsFor(d, yd);
+  const prev = pyrYearData(d, pyr.year - 1), ref = pyrRefYear(), refD = pyrYearData(d, ref);
+  const chg = o => (yd.total / (o.total || 1) - 1) * 100;
+  const sign = (v, abs) => (v > 0 ? '+' : v < 0 ? '−' : '±') +
+    (abs ? pyrFmt(Math.abs(Math.round(v))) : Math.abs(v).toFixed(Math.abs(v) < 10 ? 2 : 1).replace('.', ',') + ' %');
   const tile = (lbl, val, sub, col) => `<div class="stat" style="border-top-color:${col}">
     <div class="stat-lbl">${lbl}</div><div class="stat-val">${val}</div>
     ${sub ? `<div class="stat-sub">${sub}</div>` : ''}</div>`;
@@ -380,5 +388,13 @@ function pyrRenderStats(d, yd, c) {
     tile('65 und älter', pyrPct(s.old), 'Anteil an Bevölkerung', '#EF9F27'),
     tile('Abhängigkeitsquote', s.dep.toFixed(0) + ' %', '(0–14 + 65+) je 100 im Erwerbsalter', '#E8453C'),
     tile('Männer / Frauen', `${s.men.toFixed(1).replace('.', ',')} / ${(100 - s.men).toFixed(1).replace('.', ',')}`, 'Anteil in %', PYR_COLORS.male),
+    tile('Veränderung zum Vorjahr', prev ? sign(chg(prev)) : '–', prev ? `${sign(yd.total - prev.total, true)} Personen` : 'kein Vorjahr', '#378ADD'),
+    pyr.year < ref && refD
+      ? tile(`Veränderung bis ${ref}`, sign((refD.total / (yd.total || 1) - 1) * 100), `${pyrBig(yd.total)} → ${pyrBig(refD.total)}`, '#5B6B7A')
+      : tile(`Veränderung seit ${ref}`, refD && ref !== pyr.year ? sign(chg(refD)) : '–', refD && ref !== pyr.year ? `${pyrBig(refD.total)} → ${pyrBig(yd.total)}` : 'ist das Vergleichsjahr', '#5B6B7A'),
+    tile('Durchschnittsalter', s.mean.toFixed(1).replace('.', ',') + ' J', 'arithmetisches Mittel', '#9B59B6'),
+    tile('Altenquotient', s.oldDep.toFixed(0) + ' %', '65+ je 100 im Erwerbsalter', '#D85A30'),
+    tile('Hochbetagte 80+', pyrPct(s.o80), `${pyrBig(Math.round(s.o80 / 100 * yd.total))} Personen`, '#B5651D'),
+    tile('Unter 1 Jahr', s.babies != null ? pyrBig(s.babies) : '–', 'Jahrgang ≈ Geburten', '#E91E8C'),
   ].join(''));
 }

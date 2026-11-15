@@ -518,9 +518,14 @@ body.pyr-mode #cbList,
 body.pyr-mode .bulk-btns,
 body.pyr-mode .year-range-wrap { display: none; }
 
-body.pyr-mode .chart-inner { height: 380px; }
-@media (min-width: 768px)  { body.pyr-mode .chart-inner { height: 460px; } }
-@media (min-width: 1024px) { body.pyr-mode .chart-inner { height: 520px; } }
+body.pyr-mode .chart-inner { height: 460px; }
+@media (min-width: 768px)  { body.pyr-mode .chart-inner { height: 600px; } }
+@media (min-width: 1024px) { body.pyr-mode .chart-inner { height: 700px; } }
+/* 12 Kennzahlen: gleichmäßige Raster 2 / 3 / 4 / 6 Spalten */
+body.pyr-mode .stats { grid-template-columns: repeat(2, 1fr); }
+@media (min-width: 480px)  { body.pyr-mode .stats { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 768px)  { body.pyr-mode .stats { grid-template-columns: repeat(4, 1fr); } }
+@media (min-width: 1200px) { body.pyr-mode .stats { grid-template-columns: repeat(6, 1fr); } }
 
 .pyr-search {
   width: 100%; box-sizing: border-box; margin-bottom: 8px;
