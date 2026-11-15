@@ -102,14 +102,22 @@ function exitPyramid() {
   if(location.hash.startsWith('#pyramid')) history.replaceState(null, '', location.pathname + location.search);
 }
 
-// Radio-Liste so hoch wie die normale Checkbox-Liste (nur Desktop;
-// mobil gilt die kompakte Höhe aus dem CSS)
+// Radio-Liste endet bündig mit der 2. Reihe der Kennzahlen-Kacheln
+// (nur Desktop; mobil gilt die kompakte Höhe aus dem CSS)
 function pyrMatchHeight() {
-  const list = $('pyrList'), cb = $('cbList'), bulk = document.querySelector('.bulk-btns');
-  if(!list || !cb || !window.matchMedia?.('(min-width: 768px)').matches) { if(list) list.style.maxHeight = ''; return; }
-  const h = cb.offsetHeight + (bulk?.offsetHeight || 0) - 46;   // 46 ≈ Suchfeld + Abstand
-  if(h > 200) list.style.maxHeight = h + 'px';
+  const list = $('pyrList'), side = document.querySelector('.sidebar');
+  if(!list || !side) return;
+  if(!pyr.active || !window.matchMedia?.('(min-width: 768px)').matches) { list.style.maxHeight = ''; return; }
+  const tiles = [...document.querySelectorAll('#stats .stat')];
+  const tops = [...new Set(tiles.map(t => Math.round(t.getBoundingClientRect().top)))].sort((a, b) => a - b);
+  if(tops.length < 2) return;
+  const row2 = tiles.filter(t => Math.round(t.getBoundingClientRect().top) === tops[1]);
+  const bottom = Math.max(...row2.map(t => t.getBoundingClientRect().bottom));
+  const cs = getComputedStyle(side);
+  const h = bottom - list.getBoundingClientRect().top - parseFloat(cs.paddingBottom) - parseFloat(cs.borderBottomWidth);
+  if(h > 200) list.style.maxHeight = Math.floor(h) + 'px';
 }
+window.addEventListener('resize', () => pyr.active && pyrMatchHeight());
 
 // ── URL-Hash: #pyramid/AUT/2050 ───────────────────────────
 function pyrReadHash() {
@@ -241,13 +249,12 @@ function pyrBounds(ages) {
 
 function pyrStatsFor(d, yd) {
   const b = pyrBounds(d.ages);
-  let young = 0, work = 0, old = 0, men = 0, o80 = 0, ageSum = 0;
+  let young = 0, work = 0, old = 0, men = 0, o80 = 0;
   const tot = d.ages.map((_, i) => yd.m[i] + yd.f[i]);
   tot.forEach((v, i) => {
     const [lo, w] = b[i], hi = lo + w - 1;
     if(hi <= 14) young += v; else if(lo >= 65) old += v; else work += v;
     if(lo >= 80) o80 += v;
-    ageSum += v * (lo + w / 2);          // Gruppenmitte (Einzeljahr: x,5)
   });
   yd.m.forEach(v => men += v);
   // Medianalter: lineare Interpolation in der Gruppe, die die Hälfte überschreitet
@@ -262,7 +269,7 @@ function pyrStatsFor(d, yd) {
   return {
     young: young / yd.total * 100, work: work / yd.total * 100, old: old / yd.total * 100,
     dep: (young + old) / (work || 1) * 100, men: men / yd.total * 100, median,
-    oldDep: old / (work || 1) * 100, o80: o80 / yd.total * 100, mean: ageSum / yd.total,
+    oldDep: old / (work || 1) * 100, o80: o80 / yd.total * 100,
     babies: b[0][1] === 1 ? tot[0] : null,  // nur bei Einzeljahren
   };
 }
@@ -369,6 +376,7 @@ function pyrRender() {
     });
   }
   pyrRenderStats(d, yd, c);
+  pyrMatchHeight();
 }
 
 function pyrRenderStats(d, yd, c) {
@@ -392,7 +400,6 @@ function pyrRenderStats(d, yd, c) {
     pyr.year < ref && refD
       ? tile(`Veränderung bis ${ref}`, sign((refD.total / (yd.total || 1) - 1) * 100), `${pyrBig(yd.total)} → ${pyrBig(refD.total)}`, '#5B6B7A')
       : tile(`Veränderung seit ${ref}`, refD && ref !== pyr.year ? sign(chg(refD)) : '–', refD && ref !== pyr.year ? `${pyrBig(refD.total)} → ${pyrBig(yd.total)}` : 'ist das Vergleichsjahr', '#5B6B7A'),
-    tile('Durchschnittsalter', s.mean.toFixed(1).replace('.', ',') + ' J', 'arithmetisches Mittel', '#9B59B6'),
     tile('Altenquotient', s.oldDep.toFixed(0) + ' %', '65+ je 100 im Erwerbsalter', '#D85A30'),
     tile('Hochbetagte 80+', pyrPct(s.o80), `${pyrBig(Math.round(s.o80 / 100 * yd.total))} Personen`, '#B5651D'),
     tile('Unter 1 Jahr', s.babies != null ? pyrBig(s.babies) : '–', 'Jahrgang ≈ Geburten', '#E91E8C'),
