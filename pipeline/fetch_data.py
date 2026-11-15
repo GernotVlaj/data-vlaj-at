@@ -21,7 +21,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 try:
-    import requests
+    from wb import log, wb_rows
 except ImportError:
     print("Bitte 'pip install requests' ausführen")
     sys.exit(1)
@@ -35,10 +35,7 @@ START_YEAR = 1990
 END_YEAR   = datetime.now(timezone.utc).year - 1   # letztes abgeschlossenes Jahr
 YEARS      = list(range(START_YEAR, END_YEAR + 1))
 
-WB_TIMEOUT = 30                # Sekunden pro Request
 WB_PAUSE   = 1.0               # Pause zwischen Indikatoren
-WB_RETRIES = 5                 # Versuche pro Request
-WB_BACKOFF = [5, 15, 30, 60]   # Wartezeit vor Versuch 2, 3, 4, 5
 
 # ── Länder ────────────────────────────────────────────────
 ISO2_TO_3 = {
@@ -97,45 +94,12 @@ WB_EURUSD = ("EMU", "PA.NUS.FCRF")
 
 
 # ── Hilfsfunktionen ───────────────────────────────────────
-def log(msg):
-    print(f"[{datetime.now():%H:%M:%S}] {msg}", flush=True)
-
-
-def wb_get(url: str):
-    """GET mit Retries. Gibt die geparste JSON-Antwort zurück oder wirft."""
-    last = None
-    for attempt in range(WB_RETRIES):
-        if attempt:
-            wait = WB_BACKOFF[min(attempt - 1, len(WB_BACKOFF) - 1)]
-            log(f"    Versuch {attempt + 1}/{WB_RETRIES} in {wait}s ({last})")
-            time.sleep(wait)
-        try:
-            r = requests.get(url, timeout=WB_TIMEOUT,
-                             headers={"User-Agent": "data.vlaj.at-pipeline"})
-            if r.status_code >= 500 or r.status_code == 429:
-                last = f"HTTP {r.status_code}"
-                continue
-            r.raise_for_status()
-            return r.json()
-        except (requests.RequestException, ValueError) as e:
-            last = type(e).__name__
-    raise RuntimeError(last or "unbekannter Fehler")
-
-
 def fetch_wb(indicator: str, iso3_codes: list) -> dict:
     """Ein Indikator für alle Länder → {ISO3: {year: value}}. Wirft bei Fehler."""
-    url = (f"https://api.worldbank.org/v2/country/{';'.join(iso3_codes)}"
-           f"/indicator/{indicator}?format=json&per_page=5000"
-           f"&date={START_YEAR}:{END_YEAR}")
-    data = wb_get(url)
-    if not isinstance(data, list) or not data:
-        raise RuntimeError("unerwartete Antwort")
-    if "message" in data[0]:          # API-Fehlermeldung, z. B. Indikator archiviert
-        raise RuntimeError(str(data[0]["message"])[:120])
-    if data[0].get("pages", 1) > 1:
-        raise RuntimeError("Antwort hat mehrere Seiten – per_page erhöhen")
+    rows = wb_rows(f"country/{';'.join(iso3_codes)}/indicator/{indicator}",
+                   f"&date={START_YEAR}:{END_YEAR}")
     result = {}
-    for row in (data[1] if len(data) > 1 else None) or []:
+    for row in rows:
         if row.get("value") is None:
             continue
         iso3 = (row.get("countryiso3code") or row.get("country", {}).get("id", "")).upper()

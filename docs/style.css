@@ -507,3 +507,74 @@ body {
 .source-card-name { font-size: 12px; color: var(--text); font-weight: 500; margin-bottom: 2px; }
 .source-card-code { font-size: 10px; color: var(--text3); font-family: 'DM Mono', monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .source-card-desc { font-size: 11px; color: var(--text2); margin-top: 3px; line-height: 1.4; }
+
+/* ═══ Bevölkerungspyramide (body.pyr-mode) ═══════════════════ */
+#pyrSide, .pyr-controls, .pyr-only { display: none; }
+body.pyr-mode #pyrSide { display: block; }
+body.pyr-mode .pyr-controls { display: block; }
+body.pyr-mode .pyr-only { display: inline; }
+body.pyr-mode .line-only,
+body.pyr-mode #cbList,
+body.pyr-mode .bulk-btns,
+body.pyr-mode .year-range-wrap { display: none; }
+
+body.pyr-mode .chart-inner { height: 380px; }
+@media (min-width: 768px)  { body.pyr-mode .chart-inner { height: 460px; } }
+@media (min-width: 1024px) { body.pyr-mode .chart-inner { height: 520px; } }
+
+.pyr-search {
+  width: 100%; box-sizing: border-box; margin-bottom: 8px;
+  padding: 7px 10px; border-radius: var(--radius); border: 1px solid var(--border2);
+  background: var(--bg); color: var(--text); font: 13px 'DM Sans', sans-serif; outline: none;
+}
+.pyr-search:focus { border-color: var(--orange); }
+#pyrList { max-height: 560px; overflow-y: auto; margin-right: -6px; padding-right: 6px; }
+.pyr-row input[type=radio] { accent-color: var(--orange); width: 14px; height: 14px; cursor: pointer; flex-shrink: 0; margin: 0; }
+.pyr-row.disabled { cursor: not-allowed; opacity: .4; }
+.pyr-row.disabled:hover { background: transparent; }
+.pyr-row.disabled input { cursor: not-allowed; }
+.pyr-empty { font-size: 12px; color: var(--text3); padding: 6px; }
+@media (max-width: 767px) {
+  #pyrList { display: flex; flex-wrap: wrap; gap: 4px; max-height: 160px; }
+  #pyrList .cb-group-label { width: 100%; margin: 6px 0 2px; padding-top: 6px; }
+}
+
+.pyr-controls { padding: 10px 2px 2px; user-select: none; }
+.pyr-row1 { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.pyr-play {
+  width: 34px; height: 34px; border-radius: 50%; border: none; flex-shrink: 0;
+  background: var(--orange); color: #fff; cursor: pointer; font-size: 15px;
+  display: flex; align-items: center; justify-content: center; transition: transform .1s;
+}
+.pyr-play:hover { transform: scale(1.08); }
+.pyr-year { font: 600 22px 'DM Mono', monospace; color: var(--text); letter-spacing: -0.02em; min-width: 3.2em; }
+.pyr-badge {
+  font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em;
+  padding: 3px 8px; border-radius: 10px; background: var(--orange-light); color: var(--orange);
+}
+.pyr-spacer { flex: 1; }
+.pyr-outline { font-size: 12px; color: var(--text2); display: flex; align-items: center; gap: 5px; cursor: pointer; }
+.pyr-outline input { accent-color: var(--orange); margin: 0; }
+.pyr-toggle { display: flex; border: 1px solid var(--border2); border-radius: 20px; overflow: hidden; }
+.pyr-toggle button {
+  font: 500 11px 'DM Sans', sans-serif; padding: 5px 12px; border: none;
+  background: transparent; color: var(--text2); cursor: pointer;
+}
+.pyr-toggle button.on { background: var(--orange); color: #fff; }
+
+.pyr-track {
+  display: flex; align-items: center; gap: 10px; margin-top: 10px;
+  font: 11px 'DM Mono', monospace; color: var(--text3);
+}
+.pyr-slider { flex: 1; -webkit-appearance: none; appearance: none; height: 4px; border-radius: 2px; outline: none; cursor: pointer;
+  /* links Schätzung (kräftig), rechts Prognose (gestreift) */
+  background: linear-gradient(90deg, var(--border2) 0 var(--est, 70%), transparent var(--est, 70%)),
+              repeating-linear-gradient(90deg, var(--border2) 0 4px, transparent 4px 7px);
+}
+.pyr-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: var(--orange); border: 2.5px solid var(--card); box-shadow: 0 1px 6px rgba(0,0,0,.25); }
+.pyr-slider::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: var(--orange); border: 2.5px solid var(--card); }
+
+.pyr-legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 8px; font-size: 11px; color: var(--text2); }
+.pyr-legend span { display: flex; align-items: center; gap: 5px; }
+.pyr-legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.pyr-legend-prog { color: var(--text3); }

@@ -57,9 +57,15 @@
     <div class="sidebar">
       <div class="sidebar-header">
         Länder
-        <span style="font-size:10px;color:var(--text3);font-weight:400">max. alle wählbar</span>
+        <span class="side-hint line-only" style="font-size:10px;color:var(--text3);font-weight:400">max. alle wählbar</span>
+        <span class="side-hint pyr-only" style="font-size:10px;color:var(--text3);font-weight:400">eines wählbar · grau = keine Daten</span>
       </div>
       <div id="cbList"></div>
+      <div id="pyrSide">
+        <input id="pyrSearch" class="pyr-search" type="search" placeholder="Land suchen…" autocomplete="off"
+          oninput="pyrOnSearch(this.value)" aria-label="Land suchen">
+        <div id="pyrList" role="radiogroup" aria-label="Land wählen"></div>
+      </div>
       <div class="bulk-btns">
         <button onclick="setAll(true)">Alle</button>
         <button onclick="setAll(false)">Keine</button>
@@ -79,6 +85,30 @@
           <div class="overlay" id="overlay">
             <div class="spinner"></div>
             <div class="overlay-msg" id="overlayMsg">Daten werden geladen…</div>
+          </div>
+        </div>
+
+        <div class="pyr-controls" id="pyrControls">
+          <div class="pyr-row1">
+            <button id="pyrPlay" class="pyr-play" onclick="pyrTogglePlay()" aria-label="Abspielen"><i class="ti ti-player-play-filled" aria-hidden="true"></i></button>
+            <span class="pyr-year" id="pyrYear">–</span>
+            <span class="pyr-badge" id="pyrBadge" hidden>Prognose</span>
+            <span class="pyr-spacer"></span>
+            <label class="pyr-outline"><input type="checkbox" id="pyrOutline" onchange="pyrSetOutline(this.checked)"> Umriss <span id="pyrOutlineYear"></span></label>
+            <div class="pyr-toggle" role="group" aria-label="Einheit">
+              <button id="pyrAbsBtn" class="on" onclick="pyrSetPct(false)">absolut</button>
+              <button id="pyrPctBtn" onclick="pyrSetPct(true)">%</button>
+            </div>
+          </div>
+          <div class="pyr-track" id="pyrTrack">
+            <span id="pyrMin"></span>
+            <input type="range" id="pyrSlider" class="pyr-slider" step="1" oninput="pyrOnSlider(this.value)" aria-label="Jahr">
+            <span id="pyrMax"></span>
+          </div>
+          <div class="pyr-legend">
+            <span><i style="background:#378ADD"></i>Männer</span>
+            <span><i style="background:#D4537E"></i>Frauen</span>
+            <span class="pyr-legend-prog">Balken heller = Prognose</span>
           </div>
         </div>
 
@@ -106,6 +136,7 @@
 </div>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
   <script src="data.js"></script>
+  <script src="pyramid.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

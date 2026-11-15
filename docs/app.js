@@ -117,7 +117,7 @@ function updateStatus() {
 // ── Render Chart ──────────────────────────────────────────
 function renderChart() {
   const t = TOPICS.find(x => x.id === appState.topic);
-  if(!t || !appState.db) return;
+  if(!t || !appState.db || t.mode === 'pyramid') return;
   if(chartInst) { chartInst.destroy(); chartInst = null; }
 
   const { yearFrom, yearTo } = appState;
@@ -192,7 +192,7 @@ function srcLabel(c, t) {
 // ── Render Stats ──────────────────────────────────────────
 function renderStats() {
   const t = TOPICS.find(x => x.id === appState.topic);
-  if(!t || !appState.db) return;
+  if(!t || !appState.db || t.mode === 'pyramid') return;
   const { yearFrom, yearTo } = appState;
   const trendPos = ['hdi','lifeexp','renewables','forestarea','exports','gdppc','pop',
     'taxrev','educexp','healthexp','fertility','gdpAbs','productivity','rdexp','patents',
@@ -239,7 +239,7 @@ function renderExplainer() {
     forestarea:'🌲',exports:'📦',imports:'🚢',cab:'🔄',fdi:'🏦',
     physicians:'🩺',hospitalbed:'🛏',obesity:'⚖️',alcohol:'🍺',tobacco:'🚬',
     beer:'🍺',rdexp:'🔬',patents:'💡',tertiary:'🎓',
-    pisaread:'📖',pisamath:'📐',pisasci:'🧪',
+    pisaread:'📖',pisamath:'📐',pisasci:'🧪',pyramid:'🔺',
   };
   setEl('explainer', `
     <div class="explainer-icon">${icons[t.id] || '📊'}</div>
@@ -309,6 +309,14 @@ function setTopic(id) {
   appState.topic = id;
   buildTabs();
   const t = TOPICS.find(x => x.id === id);
+  // Eigener Modus: Bevölkerungspyramide (pyramid.js)
+  if(t.mode === 'pyramid') {
+    renderExplainer();
+    if(!pyr.active) enterPyramid();
+    return;
+  }
+  exitPyramid();
+  hideOverlay();
   const el = $('chartTitle');
   if(el) el.textContent = t.title.split('(')[0].trim();
   const sub = $('chartSubtitle');
@@ -414,7 +422,7 @@ async function init() {
 
     hideOverlay();
     initSlider();
-    setTopic('debt');
+    setTopic(location.hash.startsWith('#pyramid') ? 'pyramid' : 'debt');
     updateStatus();
 
   } catch(err) {

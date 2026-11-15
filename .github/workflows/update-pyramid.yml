@@ -1,0 +1,45 @@
+name: Bevölkerungspyramiden aktualisieren
+
+on:
+  schedule:
+    # Am 1. jedes Monats um 05:00 UTC
+    - cron: '0 5 1 * *'
+  # Manuell auslösbar im GitHub UI (Actions → Run workflow)
+  workflow_dispatch:
+
+permissions:
+  contents: write   # zum Pushen von docs/pyramid/
+
+concurrency:
+  group: update-pyramid
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Repository auschecken
+        uses: actions/checkout@v4
+
+      - name: Python einrichten
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Abhängigkeiten installieren
+        run: pip install requests
+
+      - name: Pipeline ausführen
+        run: python pipeline/fetch_pyramid.py
+
+      - name: Pyramiden committen und pushen
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A docs/pyramid
+          # Nur committen wenn sich etwas geändert hat
+          git diff --staged --quiet || git commit -m "data: Pyramiden-Update $(date -u '+%Y-%m-%d')"
+          git pull --rebase --quiet
+          git push

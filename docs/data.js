@@ -128,6 +128,10 @@ const TOPIC_GROUPS = [
       title: 'Medianalter der Bevölkerung (Jahre)',
       body: 'Das Medianalter ist der Alterswert, der die Bevölkerung in zwei gleich große Hälften teilt. Japan (~49 J.), Deutschland (~46 J.) und Italien (~47 J.) haben das höchste Medianalter der Welt. Junge Bevölkerungen (Indien ~28 J., Brasilien ~33 J.) haben mehr Arbeitskräftepotenzial, aber höheren Bedarf an Infrastruktur und Bildung. Hinweis: Weltbank führt keinen direkten Medianalter-Indikator – dieser wird aus dem Altersstruktur-Abhängigkeitsquotient approximiert.',
       source: 'Näherung via Weltbank SP.POP.DPND (Abhängigkeitsquotient als Proxy)' },
+    { id: 'pyramid', label: 'Bevölkerungspyramide', mode: 'pyramid', ind: null, unit: '', yLbl: 'Personen', dec: 0,
+      title: 'Bevölkerungspyramide (Alter & Geschlecht)',
+      body: 'Die Bevölkerungspyramide zeigt den Altersaufbau eines Landes: links die Männer, rechts die Frauen, unten die Jüngsten. Eine breite Basis (klassische Pyramide) steht für hohe Geburtenraten, wie in vielen afrikanischen Ländern. Eine Urnen- oder Zwiebelform mit schmaler Basis und breiter Mitte zeigt eine alternde Gesellschaft, wie in Japan, Italien oder Österreich. Mit dem Schieberegler oder ▶ lässt sich die Entwicklung von 1960 bis 2050 verfolgen. Jahre nach dem letzten Schätzjahr sind Prognosen (mittlere Variante) und heller dargestellt. Der Umriss zeigt zum Vergleich das letzte Schätzjahr.',
+      source: 'Weltbank: Population estimates and projections (SP.POP.<Alter>.MA/FE)' },
   ]},
   { group: 'Bildung & Innovation', topics: [
     { id: 'rdexp',    label: 'Forschungsausg. R&D', ind: 'GB.XPD.RSDV.GD.ZS', unit: '% BIP', yLbl: '% des BIP',   dec: 2,
