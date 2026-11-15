@@ -513,6 +513,7 @@ body {
 /* ═══ Bevölkerungspyramide (body.pyr-mode) ═══════════════════ */
 #pyrSide, .pyr-controls, .pyr-only { display: none; }
 body.pyr-mode #pyrSide { display: block; }
+body.pyr-mode .sidebar-header { display: none; }   /* Suchfeld + Radio-Liste erklären sich selbst */
 @media (min-width: 768px) { body.pyr-mode .sidebar { align-self: start; } }
 body.pyr-mode .pyr-controls { display: block; }
 body.pyr-mode .pyr-only { display: inline; }
