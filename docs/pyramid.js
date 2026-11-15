@@ -99,7 +99,19 @@ function exitPyramid() {
   pyrStop();
   if(pyr.chart) { pyr.chart.destroy(); pyr.chart = null; }
   document.body.classList.remove('pyr-mode');
+  pyrFitChart();
   if(location.hash.startsWith('#pyramid')) history.replaceState(null, '', location.pathname + location.search);
+}
+
+// Desktop: Diagramm-Karte (Pyramide + Steuerung) passt ohne Scrollen ins Fenster
+function pyrFitChart() {
+  const card = document.querySelector('.chart-card'), inner = document.querySelector('.chart-inner');
+  if(!card || !inner) return;
+  if(!pyr.active || !window.matchMedia?.('(min-width: 768px)').matches) { inner.style.height = ''; return; }
+  const top = card.getBoundingClientRect().top + window.scrollY;   // Abstand bei ganz nach oben gescrollter Seite
+  const chrome = card.offsetHeight - inner.offsetHeight;            // Titel, Steuerung, Legende, Innenabstand
+  const h = Math.max(320, Math.min(900, Math.floor(window.innerHeight - top - chrome - 12)));
+  if(inner.style.height !== h + 'px') inner.style.height = h + 'px';
 }
 
 // Radio-Liste endet bündig mit der 2. Reihe der Kennzahlen-Kacheln
@@ -117,7 +129,7 @@ function pyrMatchHeight() {
   const h = bottom - list.getBoundingClientRect().top - parseFloat(cs.paddingBottom) - parseFloat(cs.borderBottomWidth);
   if(h > 200) list.style.maxHeight = Math.floor(h) + 'px';
 }
-window.addEventListener('resize', () => pyr.active && pyrMatchHeight());
+window.addEventListener('resize', () => { if(pyr.active) { pyrFitChart(); pyrMatchHeight(); } });
 
 // ── URL-Hash: #pyramid/AUT/2050 ───────────────────────────
 function pyrReadHash() {
@@ -291,6 +303,7 @@ function pyrRender() {
   if(!pyr.active || !pyr.index) return;
   const d = pyr.cache[pyr.iso3], c = pyrCountry(pyr.iso3);
   if(!d || !c) return;
+  pyrFitChart();
   const yd = pyrYearData(d, pyr.year);
   if(!yd) return;
   const est = pyr.index.lastEstimateYear;
