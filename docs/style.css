@@ -86,11 +86,14 @@ body {
   line-height: 1.5;
 }
 
+/* Alle drei Leisten kleben gemeinsam oben – keine festen Pixel-Abstände */
+.site-header { position: sticky; top: 0; z-index: 100; background: var(--bg); }
+
 /* ═══════════════════════════════════════════════════════════
    NAVBAR
 ═══════════════════════════════════════════════════════════ */
 .navbar {
-  position: sticky; top: 0; z-index: 100;
+  position: relative; z-index: 100;
   background: var(--card); border-bottom: 1px solid var(--border);
   padding: 8px var(--space-md);
   display: grid;
@@ -184,7 +187,7 @@ body {
 .group-tabs-bar {
   background: var(--card); border-bottom: 1px solid var(--border);
   display: flex; justify-content: center; align-items: stretch;
-  position: sticky; top: 48px; z-index: 90;
+  position: relative; z-index: 90;
 }
 .group-tabs-inner { display: flex; align-items: stretch; }
 .group-tab {
@@ -245,9 +248,8 @@ body {
   background: var(--bg); border-bottom: 1px solid var(--border);
   padding: 6px var(--space-md); display: flex; gap: 5px;
   flex-wrap: wrap; justify-content: center;
-  position: sticky; top: 94px; z-index: 80;
+  position: relative; z-index: 80;
 }
-@media (min-width: 768px) { .indicator-pills-bar { top: 96px; } }
 
 .ind-pill {
   font-size: 11px; padding: 4px 11px; border-radius: 20px;
