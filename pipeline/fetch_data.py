@@ -16,11 +16,12 @@ Läuft wöchentlich via .github/workflows/update-data.yml
 Lokal: pip install requests && python pipeline/fetch_data.py
 """
 
-import json, sys, time
+import csv, io, json, re, sys, time
 from datetime import datetime, timezone
 from pathlib import Path
 
 try:
+    import requests
     from wb import log, wb_rows
 except ImportError:
     print("Bitte 'pip install requests' ausführen")
@@ -75,7 +76,7 @@ WB_INDICATORS = {
     "popgrowth":    ("SP.POP.GROW",          2),
     "fertility":    ("SP.DYN.TFRT.IN",       2),
     "aged":         ("SP.POP.65UP.TO.ZS",    1),
-    "medage":       ("SP.POP.DPND",          1),
+    "dependency":   ("SP.POP.DPND",          1),
     "rdexp":        ("GB.XPD.RSDV.GD.ZS",    2),
     "tertiary":     ("SE.TER.ENRR",          1),
     "co2":          ("EN.GHG.CO2.PC.CE.AR5", 1),
@@ -89,6 +90,18 @@ WB_INDICATORS = {
     "cab":          ("BN.CAB.XOKA.GD.ZS",    1),
     "fdi":          ("BX.KLT.DINV.WD.GD.ZS", 1),
 }
+# Medianalter: Weltbank führt keinen Indikator dafür → aus den UN-WPP-Pyramiden
+# (docs/pyramid/<ISO3>.json, Einzelalter, Stand 1. Jänner) berechnet.
+PYRAMID_DIR = ROOT / "docs" / "pyramid"
+
+# HDI: offizielle UNDP-Zeitreihe (CSV), neueste Ausgabe zuerst
+HDR_BASE = "https://hdr.undp.org/sites/default/files"
+HDR_URLS = [
+    f"{HDR_BASE}/2026_HDR/HDR26_Composite_indices_complete_time_series.csv",
+    f"{HDR_BASE}/2025_HDR/HDR25_Composite_indices_complete_time_series.csv",
+    f"{HDR_BASE}/2023-24_HDR/HDR23-24_Composite_indices_complete_time_series.csv",
+]
+
 # Euro-Raum: offizieller Wechselkurs EUR je USD (Jahresdurchschnitt)
 WB_EURUSD = ("EMU", "PA.NUS.FCRF")
 
@@ -109,6 +122,55 @@ def fetch_wb(indicator: str, iso3_codes: list) -> dict:
             continue
         result.setdefault(iso3, {})[year] = float(row["value"])
     return result
+
+
+def median_age(iso3: str) -> dict:
+    """Medianalter je Jahr aus der UN-WPP-Pyramide → {year: Jahre}. Wirft bei Fehler."""
+    d = json.loads((PYRAMID_DIR / f"{iso3}.json").read_text())
+    ages = d["ages"]
+    if len(ages) < 50:
+        raise RuntimeError("keine Einzelalter")
+    lows = [int(re.match(r"\d+", a).group()) for a in ages]
+    result = {}
+    for y, m, f in zip(d["years"], d["male"], d["female"]):
+        tot = [(a or 0) + (b or 0) for a, b in zip(m, f)]
+        half, cum = sum(tot) / 2, 0
+        if not half:
+            continue
+        for lo, v in zip(lows, tot):          # lineare Interpolation im Altersjahr
+            if cum + v >= half:
+                result[y] = lo + (half - cum) / (v or 1)
+                break
+            cum += v
+    return result
+
+
+def fetch_hdi(iso3_codes: list) -> dict:
+    """HDI aus der UNDP-Zeitreihe → {ISO3: {year: value}}. Wirft bei Fehler."""
+    last = None
+    for url in HDR_URLS:
+        try:
+            r = requests.get(url, timeout=60, headers={"User-Agent": "data.vlaj.at-pipeline"})
+            if r.status_code != 200 or not r.content.startswith(b"iso3,"):
+                last = f"HTTP {r.status_code}"
+                continue
+            rows = csv.DictReader(io.StringIO(r.content.decode("utf-8", "replace")))
+            result = {}
+            for row in rows:
+                iso3 = (row.get("iso3") or "").upper()
+                if iso3 not in iso3_codes:
+                    continue
+                for y in YEARS:
+                    v = (row.get(f"hdi_{y}") or "").strip()
+                    if v:
+                        result.setdefault(iso3, {})[y] = float(v)
+            if not result:
+                raise RuntimeError("keine HDI-Werte in der Datei")
+            log(f"  UNDP-Datei: {url.rsplit('/', 1)[-1]}")
+            return result
+        except requests.RequestException as e:
+            last = type(e).__name__
+    raise RuntimeError(last or "keine UNDP-Datei gefunden")
 
 
 def load_previous() -> dict:
@@ -185,9 +247,51 @@ def main():
         log("✗ Keine einzige API-Antwort – data.json bleibt unverändert")
         sys.exit(1)
 
-    # ── 2. Nur statische Daten (keine WB-Quelle) ─────────
+    # ── 2. Medianalter (UN WPP) und HDI (UNDP) ───────────
+    def fill(topic, raw_for, dec):
+        """raw_for(cc) → {year: val} oder None (Quelle fehlgeschlagen)."""
+        src[topic] = {}
+        for cc in COUNTRIES:
+            api = raw_for(cc)
+            old = prev.get(cc, {}).get(topic, {})
+            vals, used = {}, set()
+            for y in YEARS:
+                if api and api.get(y) is not None:
+                    vals[y] = rnd(api[y], dec); used.add("api")
+                elif api is None and old.get(y) is not None:
+                    vals[y] = old[y]; used.add("prev")
+                elif fb_val(topic, cc, y) is not None:
+                    vals[y] = fb_val(topic, cc, y); used.add("fallback")
+                else:
+                    vals[y] = None
+            data[cc][topic] = vals
+            src[topic][cc] = ("api" if "api" in used else "prev" if "prev" in used
+                              else "fallback" if "fallback" in used else "none")
+
+    log("UN WPP → medage")
+    med = {}
+    for cc in COUNTRIES:
+        try:
+            med[cc] = median_age(ISO2_TO_3[cc])
+        except Exception as e:
+            log(f"  ✗ {cc}: {e}")
+            med[cc] = None
+    if all(v is None for v in med.values()):
+        failed.append("medage")
+    fill("medage", med.get, 1)
+
+    log("UNDP → hdi")
+    try:
+        hdi = fetch_hdi(iso3_list)
+    except Exception as e:
+        log(f"  ✗ {e} – behalte alte Werte/Fallback")
+        hdi = None
+        failed.append("hdi")
+    fill("hdi", lambda cc: None if hdi is None else hdi.get(ISO2_TO_3[cc], {}), 3)
+
+    # ── 3. Nur statische Daten (keine Online-Quelle) ─────
     for topic in fb["topics"]:
-        if topic in WB_INDICATORS:
+        if topic in WB_INDICATORS or topic in ("medage", "hdi"):
             continue
         src[topic] = {}
         for cc in COUNTRIES:
@@ -195,7 +299,7 @@ def main():
             has = any(v is not None for v in data[cc][topic].values())
             src[topic][cc] = "fallback" if has else "none"
 
-    # ── 3. Wechselkurs EUR/USD ───────────────────────────
+    # ── 4. Wechselkurs EUR/USD ───────────────────────────
     eurusd = {fb_start + i: v for i, v in enumerate(fb["eurusd"])}
     try:
         raw = fetch_wb(WB_EURUSD[1], [WB_EURUSD[0]])
@@ -208,7 +312,7 @@ def main():
     last_rate = eurusd[max(eurusd)]
     rate = lambda y: eurusd.get(y, last_rate)
 
-    # ── 4. Abgeleitete Werte ─────────────────────────────
+    # ── 5. Abgeleitete Werte ─────────────────────────────
     for t in ("gdppc", "gdpAbs", "debtAbs"):
         src[t] = {}
     for cc in COUNTRIES:
@@ -231,7 +335,7 @@ def main():
                         src[t][cc] = "prev"
     src.pop("gdppc_usd"); src.pop("gdpAbs_usd")
 
-    # ── 5. Ausgabe ───────────────────────────────────────
+    # ── 6. Ausgabe ───────────────────────────────────────
     output = {
         "generated": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "years":     YEARS,

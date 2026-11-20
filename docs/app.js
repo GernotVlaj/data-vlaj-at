@@ -234,7 +234,7 @@ function renderExplainer() {
     gdp:'📈',gdpAbs:'🏭',infl:'🔥',unemp:'👷',gdppc:'💵',
     productivity:'⚙️',realwage:'💼',poverty:'🏚',netmigration:'✈️',gini:'⚖️',
     hdi:'🌍',lifeexp:'❤️',healthexp:'🏥',educexp:'🎓',pop:'👥',
-    popgrowth:'📊',fertility:'👶',aged:'🧓',medage:'📅',co2:'🌫',
+    popgrowth:'📊',fertility:'👶',aged:'🧓',medage:'📅',dependency:'🧑‍🤝‍🧑',co2:'🌫',
     renewables:'⚡',nuclear:'⚛️',energyimport:'🔌',water:'💧',plastic:'🗑',
     forestarea:'🌲',exports:'📦',imports:'🚢',cab:'🔄',fdi:'🏦',
     physicians:'🩺',hospitalbed:'🛏',obesity:'⚖️',alcohol:'🍺',tobacco:'🚬',
