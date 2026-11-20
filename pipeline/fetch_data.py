@@ -75,6 +75,8 @@ WB_INDICATORS = {
     "pop":          ("SP.POP.TOTL",          0),
     "popgrowth":    ("SP.POP.GROW",          2),
     "fertility":    ("SP.DYN.TFRT.IN",       2),
+    "children":     ("SP.POP.0014.TO.ZS",    1),
+    "workingage":   ("SP.POP.1564.TO.ZS",    1),
     "aged":         ("SP.POP.65UP.TO.ZS",    1),
     "dependency":   ("SP.POP.DPND",          1),
     "rdexp":        ("GB.XPD.RSDV.GD.ZS",    2),

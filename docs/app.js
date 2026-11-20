@@ -196,7 +196,7 @@ function renderStats() {
   const { yearFrom, yearTo } = appState;
   const trendPos = ['hdi','lifeexp','renewables','forestarea','exports','gdppc','pop',
     'taxrev','educexp','healthexp','fertility','gdpAbs','productivity','rdexp','patents',
-    'tertiary','pisaread','pisamath','pisasci'];
+    'tertiary','pisaread','pisamath','pisasci','workingage'];
 
   const html = ALL_ITEMS.filter(c => appState.visible.has(c.code)).map(c => {
     const col = COLORS[c.code] || '#888';
@@ -234,7 +234,7 @@ function renderExplainer() {
     gdp:'📈',gdpAbs:'🏭',infl:'🔥',unemp:'👷',gdppc:'💵',
     productivity:'⚙️',realwage:'💼',poverty:'🏚',netmigration:'✈️',gini:'⚖️',
     hdi:'🌍',lifeexp:'❤️',healthexp:'🏥',educexp:'🎓',pop:'👥',
-    popgrowth:'📊',fertility:'👶',aged:'🧓',medage:'📅',dependency:'🧑‍🤝‍🧑',co2:'🌫',
+    popgrowth:'📊',fertility:'👶',aged:'🧓',medage:'📅',children:'🧒',workingage:'👩‍💼',dependency:'🧑‍🤝‍🧑',co2:'🌫',
     renewables:'⚡',nuclear:'⚛️',energyimport:'🔌',water:'💧',plastic:'🗑',
     forestarea:'🌲',exports:'📦',imports:'🚢',cab:'🔄',fdi:'🏦',
     physicians:'🩺',hospitalbed:'🛏',obesity:'⚖️',alcohol:'🍺',tobacco:'🚬',
