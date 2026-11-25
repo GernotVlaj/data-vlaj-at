@@ -67,6 +67,11 @@
           oninput="pyrOnSearch(this.value)" aria-label="Land suchen">
         <div id="pyrList" role="radiogroup" aria-label="Land wählen"></div>
       </div>
+      <div id="klSide">
+        <input id="klSearch" class="pyr-search" type="search" placeholder="Stadt oder Land suchen…" autocomplete="off"
+          oninput="klOnSearch(this.value)" aria-label="Stadt suchen">
+        <div id="klList" role="radiogroup" aria-label="Stadt wählen"></div>
+      </div>
       <div class="bulk-btns">
         <button onclick="setAll(true)">Alle</button>
         <button onclick="setAll(false)">Keine</button>
@@ -83,6 +88,7 @@
         </div>
         <div class="chart-inner">
           <canvas id="chart" role="img" aria-label="Liniendiagramm Wirtschaftsdaten"></canvas>
+          <canvas id="klCanvas" role="img" aria-label="Klimadiagramm nach Walter und Lieth"></canvas>
           <div class="overlay" id="overlay">
             <div class="spinner"></div>
             <div class="overlay-msg" id="overlayMsg">Daten werden geladen…</div>
@@ -113,6 +119,18 @@
           </div>
         </div>
 
+        <div class="kl-controls" id="klControls">
+          <div class="kl-row1">
+            <div class="kl-station" id="klStation"></div>
+            <div class="pyr-toggle" role="group" aria-label="Darstellung">
+              <button id="klWlBtn" class="on" onclick="klSetMode('wl')">Walter/Lieth</button>
+              <button id="klBarBtn" onclick="klSetMode('bar')">Balken</button>
+            </div>
+          </div>
+          <div class="kl-legend" id="klLegend"></div>
+          <div class="kl-table-wrap"><table class="kl-table" id="klTable"></table></div>
+        </div>
+
         <div class="year-range-wrap">
           <div class="year-range-labels">
             <span id="yearFrom">1990</span>
@@ -138,6 +156,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
   <script src="data.js"></script>
   <script src="pyramid.js"></script>
+  <script src="klima.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

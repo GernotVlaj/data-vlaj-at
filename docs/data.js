@@ -219,6 +219,12 @@ const TOPIC_GROUPS = [
       body: 'Ausländische Direktinvestitionen (FDI) zeigen, wie attraktiv ein Land für internationale Unternehmen als Produktions- oder Marktstandort ist. Hohe Werte deuten auf Vertrauen in Rechtssicherheit, Infrastruktur und Marktpotenzial hin. Irland und Luxemburg haben durch ihre Steuerpolitik strukturell sehr hohe Werte.',
       source: 'Weltbank: BX.KLT.DINV.WD.GD.ZS' },
   ]},
+  { group: 'Klima', topics: [
+    { id: 'klima', label: 'Klimadiagramm', mode: 'klima', ind: null, unit: '', yLbl: '', dec: 1,
+      title: 'Klimadiagramm (Normalperiode 1991–2020)',
+      body: 'Das Klimadiagramm nach Walter und Lieth zeigt auf einen Blick, wie warm und wie feucht es an einem Ort im Jahreslauf ist. Die rote Kurve ist die mittlere Monatstemperatur, die blaue der mittlere Monatsniederschlag. Beide Achsen sind im Verhältnis 10 °C zu 20 mm skaliert: Liegt die Niederschlagskurve über der Temperaturkurve, ist der Monat humid (blau schraffiert), liegt sie darunter, ist er arid, es verdunstet also mehr Wasser, als fällt (rot gepunktet). Über 100 mm wird die Niederschlagsachse auf ein Zehntel gestaucht und dunkelblau gefüllt, damit auch Monsunmonate ins Bild passen. Alle Werte sind 30-jährige Mittel der Jahre 1991 bis 2020 der nächstgelegenen Messstation mit vollständiger Reihe. Die Klimazone nach Köppen-Geiger wird aus denselben Werten berechnet.',
+      source: 'WMO Climate Normals 1991–2020 (nationale Wetterdienste, archiviert bei NOAA NCEI) · NOAA NCEI Global Summary of the Month (GHCN-Daily, gemeinfrei) · GeoSphere Austria Data Hub, klima-v2-1m (CC BY 4.0) · Städte: GeoNames (CC BY 4.0) · Mindestens 24 von 30 Jahren je Monat' },
+  ]},
 ];
 
 const COLORS = {
