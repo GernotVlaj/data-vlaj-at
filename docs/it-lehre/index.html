@@ -156,9 +156,9 @@ body.idle{cursor:none}
 #hint{position:fixed;left:16px;bottom:12px;color:#9aa3ab;font:13px var(--mono);opacity:.0;transition:opacity .4s;z-index:20}
 body:not(.idle) #hint{opacity:.8}
 
-@media (prefers-reduced-motion: reduce){
-  .circuit,#lines .pulse,.float,.row .t{animation:none!important}
-}
+/* Bewusst KEINE Abschaltung bei prefers-reduced-motion: Die Seite ist eine Werbe-Endlosschleife
+   für Bildschirme am Infostand; Schul-PCs (Windows „Animationseffekte“ aus, Fernzugriff) melden
+   sonst „reduzierte Bewegung“, und Leiterbahnen/Laufschrift stünden still. */
 </style>
 </head>
 <body>
